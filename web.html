@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NutriGuide – what to eat for your body</title>
+<style>
+:root{--bg:#f3f8f4;--card:#fff;--ink:#16261c;--mute:#5c6f63;--line:#d8e5dc;--g:#2f7d4f;--g2:#e4f2e9;--y:#e0a21b;--b:#3c7fa8;--bad:#b3402f}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0f1812;--card:#17241b;--ink:#e8f1ea;--mute:#9bb0a2;--line:#27382d;--g:#5fbf86;--g2:#1d3225;--y:#e8b84a;--b:#6aaed4;--bad:#e07a68}}
+:root[data-theme=dark]{--bg:#0f1812;--card:#17241b;--ink:#e8f1ea;--mute:#9bb0a2;--line:#27382d;--g:#5fbf86;--g2:#1d3225;--y:#e8b84a;--b:#6aaed4;--bad:#e07a68}
+*{box-sizing:border-box}
+html{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+.wrap{max-width:760px;margin:0 auto;padding:20px 16px 48px}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+h1{font:700 2rem/1.1 Georgia,"Times New Roman",serif;margin:0;color:var(--g)}
+h2{font:700 1.25rem Georgia,serif;margin:0 0 12px}
+.sub{color:var(--mute);margin:4px 0 20px;max-width:56ch}
+button,select,input{font:inherit;color:inherit}
+.theme{background:none;border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer;color:var(--mute)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:16px}
+form{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.f{display:flex;flex-direction:column;gap:4px}.full{grid-column:1/-1}
+label{font-size:.9rem;color:var(--mute)}
+.row{display:flex;gap:6px}
+input,select{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;min-width:0}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--g);outline-offset:1px}
+.row select{width:84px;flex:none}
+.go{grid-column:1/-1;background:var(--g);color:#fff;border:0;border-radius:12px;padding:14px;font-weight:600;cursor:pointer}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .go{color:#0f1812}}
+:root[data-theme=dark] .go{color:#0f1812}
+.err{color:var(--bad);grid-column:1/-1;min-height:1.2em;margin:0}
+#out{display:none}
+#out.show{display:block;animation:rise .5s ease}
+@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){#out.show{animation:none}}
+.notice{border-left:4px solid var(--y);background:var(--g2);padding:12px 14px;border-radius:8px;margin-bottom:16px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:var(--g2);border-radius:12px;padding:12px}
+.stat b{display:block;font-size:1.35rem}
+.stat span{font-size:.82rem;color:var(--mute)}
+.ringbox{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.ringbox svg{width:150px;height:150px;flex:none}
+.leg{display:grid;gap:6px}.leg i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px}
+.meal{padding:12px 0;border-top:1px solid var(--line)}.meal:first-of-type{border-top:0}
+.meal h3{margin:0;font-size:1rem;display:flex;justify-content:space-between}
+.meal h3 span{color:var(--g);font-weight:600}.meal p{margin:2px 0 0;color:var(--mute)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+ul{margin:0;padding-left:1.1em}li{margin:3px 0}
+.disc{font-size:.85rem;color:var(--mute)}
+.pr{background:none;border:1px solid var(--line);border-radius:10px;padding:8px 14px;cursor:pointer;margin-top:8px}
+@media (max-width:560px){form,.two{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}.full{grid-column:auto}}
+@media print{.theme,form,.pr,.intro{display:none}body{background:#fff;color:#000}.card{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><h1>NutriGuide</h1><button class="theme" id="theme" type="button">Dark mode</button></header>
+<p class="sub intro">Enter your body details and get a daily calorie target, protein, carbs, fat, water and a sample day of meals.</p>
+
+<div class="card intro">
+<form id="f" novalidate>
+<div class="f"><label for="w">Weight</label><div class="row"><input id="w" type="number" inputmode="decimal" step="0.1" placeholder="70"><select id="wu" aria-label="Weight unit"><option>kg</option><option>lb</option></select></div></div>
+<div class="f"><label for="h">Height</label><div class="row"><input id="h" type="number" inputmode="decimal" placeholder="170"><input id="h2" type="number" inputmode="decimal" placeholder="in" hidden><select id="hu" aria-label="Height unit"><option>cm</option><option>ft/in</option></select></div></div>
+<div class="f"><label for="a">Age</label><input id="a" type="number" inputmode="numeric" placeholder="30"></div>
+<div class="f"><label for="s">Sex</label><select id="s"><option value="m">Male</option><option value="f">Female</option></select></div>
+<div class="f"><label for="act">Activity level</label><select id="act"><option value="1.2">Sedentary (desk job, little exercise)</option><option value="1.375">Light (1–3 workouts a week)</option><option value="1.55" selected>Moderate (3–5 workouts a week)</option><option value="1.725">Very active (hard training daily)</option></select></div>
+<div class="f"><label for="g">Goal</label><select id="g"><option value="lose">Lose weight</option><option value="keep" selected>Maintain weight</option><option value="gain">Gain weight / muscle</option></select></div>
+<p class="err full" id="err" role="alert"></p>
+<button class="go" type="submit">Get my plan</button>
+</form>
+</div>
+
+<div id="out">
+<div class="notice" id="minor" hidden><b>Under 18?</b> Adult formulas don't fit growing bodies. Please see a doctor or dietitian for a plan made for your age.</div>
+<div id="main">
+<div class="card"><h2>Your daily targets</h2><div class="stats" id="stats"></div><p class="disc" id="bmi"></p></div>
+<div class="card"><h2>Where your calories come from</h2><div class="ringbox"><svg viewBox="0 0 42 42" id="ring" role="img" aria-label="Macro split chart"></svg><div class="leg" id="leg"></div></div></div>
+<div class="card"><h2>A sample day</h2><div id="meals"></div></div>
+<div class="two">
+<div class="card"><h2>Eat more of</h2><ul><li>Daal, chana and lobia</li><li>Seasonal sabzi and salad</li><li>Eggs, chicken, fish</li><li>Yogurt (dahi) and milk</li><li>Fruit, nuts and seeds</li><li>Whole wheat roti, oats, brown rice</li></ul></div>
+<div class="card"><h2>Eat less of</h2><ul><li>Sugary drinks and chai with lots of sugar</li><li>Samosa, pakora and other deep-fried food</li><li>Bakery items and sweets</li><li>White bread and excess white rice</li><li>Packaged chips and biscuits</li><li>Heavy ghee and oil in curries</li></ul></div>
+</div>
+<div class="card"><h2>Everyday habits</h2><ul><li>Sleep 7–9 hours.</li><li>Walk 30 minutes most days.</li><li>Drink water through the day, not all at once.</li><li>Eat slowly and stop when you feel 80% full.</li></ul></div>
+</div>
+<p class="disc">This is general guidance, not medical advice. Consult a doctor or registered dietitian, especially if you have a medical condition, are pregnant, or have an eating disorder.</p>
+<button class="pr" type="button" onclick="window.print()">Print or save as PDF</button>
+</div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+// theme
+const root=document.documentElement;
+$('theme').onclick=()=>{const dark=getComputedStyle(root).getPropertyValue('--bg').trim()==='#0f1812';root.dataset.theme=dark?'light':'dark';$('theme').textContent=dark?'Dark mode':'Light mode'};
+// height unit toggle
+$('hu').onchange=()=>{const ft=$('hu').value==='ft/in';$('h2').hidden=!ft;$('h').placeholder=ft?'ft':'170'};
+
+$('f').addEventListener('submit',e=>{
+  e.preventDefault();
+  const err=m=>{$('err').textContent=m};
+  let w=+$('w').value,a=+$('a').value,h=+$('h').value;
+  if($('wu').value==='lb')w*=0.45359;
+  if($('hu').value==='ft/in')h=h*30.48+(+$('h2').value||0)*2.54;
+  if(!(w>=25&&w<=300))return err('Enter a weight between 25 and 300 kg (55–660 lb).');
+  if(!(h>=100&&h<=250))return err('Enter a height between 100 and 250 cm (3 ft 3 in – 8 ft 2 in).');
+  if(!(a>=5&&a<=100))return err('Enter an age between 5 and 100.');
+  err('');
+  const out=$('out');out.classList.remove('show');
+  if(a<18){$('minor').hidden=false;$('main').hidden=true;void out.offsetWidth;out.classList.add('show');out.style.display='block';out.scrollIntoView({behavior:'smooth'});return}
+  $('minor').hidden=true;$('main').hidden=false;
+  const male=$('s').value==='m',goal=$('g').value;
+  const bmi=w/((h/100)**2);
+  const cat=bmi<18.5?'underweight':bmi<25?'in the healthy range':bmi<30?'overweight':'in the obese range';
+  const bmr=10*w+6.25*h-5*a+(male?5:-161);
+  const tdee=bmr*(+$('act').value);
+  let kcal=tdee+(goal==='lose'?-500:goal==='gain'?400:0);
+  const floor=male?1500:1200,floored=kcal<floor;
+  kcal=Math.round(Math.max(kcal,floor)/10)*10;
+  const pg=Math.round(w*(goal==='lose'?1.6:goal==='gain'?1.8:1.2));
+  const fat=Math.round(kcal*0.27/9);
+  const carb=Math.max(0,Math.round((kcal-pg*4-fat*9)/4));
+  const water=(w*0.033).toFixed(1);
+  const stats=[[kcal,'calories a day'],[pg+' g','protein'],[carb+' g','carbs'],[fat+' g','fat'],[water+' L','water'],[bmi.toFixed(1),'BMI']];
+  $('stats').innerHTML=stats.map(s=>`<div class="stat"><b>${s[0]}</b><span>${s[1]}</span></div>`).join('');
+  $('bmi').textContent=`Your BMI is ${bmi.toFixed(1)}, which is ${cat}. BMI is a rough guide and can mislead for muscular people and some South Asian body types.`+(floored?` Your target was raised to the safe minimum of ${floor} kcal.`:'');
+  // ring
+  const parts=[[pg*4,'var(--b)','Protein'],[carb*4,'var(--y)','Carbs'],[fat*9,'var(--g)','Fat']];
+  const tot=parts.reduce((s,p)=>s+p[0],0);let off=25,svg='<circle cx="21" cy="21" r="15.9" fill="none" stroke="var(--line)" stroke-width="5"/>',leg='';
+  parts.forEach(p=>{const pc=p[0]/tot*100;svg+=`<circle cx="21" cy="21" r="15.9" fill="none" stroke="${p[1]}" stroke-width="5" stroke-dasharray="${pc} ${100-pc}" stroke-dashoffset="${off}"/>`;off-=pc;leg+=`<div><i style="background:${p[1]}"></i>${p[2]} ${Math.round(pc)}%</div>`});
+  $('ring').innerHTML=svg;$('leg').innerHTML=leg;
+  // meals
+  const n=(x,min,max)=>Math.min(max,Math.max(min,Math.round(x)));
+  const B=kcal*.25,L=kcal*.3,D=kcal*.25,S=kcal*.1;
+  const meals=[
+    ['Breakfast',B,`${n(B*.3/75,1,4)} boiled or omelette eggs, ${n(B*.4/100,1,3)} whole wheat roti, 1 cup chai with little sugar`],
+    ['Snack',S,`1 fruit (apple, banana or guava) and a small handful of almonds`],
+    ['Lunch',L,`${n(L*.35/100,1,4)} roti, ${n(L*.25/180,1,2)} bowl daal, ${n(L*.2/120,1,2)} bowl mixed sabzi, salad and ${n(L*.15/60,1,2)} small bowl dahi`],
+    ['Snack',S,`1 cup yogurt or lassi (unsweetened) and roasted chana`],
+    ['Dinner',D,`${n(D*.35/100,1,3)} roti or 1 cup rice, ${n(D*.3/55,2,6)} pieces (about ${n(D*.3/55*30,60,200)} g) chicken or fish, 1 bowl sabzi and salad`]
+  ];
+  $('meals').innerHTML=meals.map(m=>`<div class="meal"><h3>${m[0]}<span>~${Math.round(m[1]/10)*10} kcal</span></h3><p>${m[2]}</p></div>`).join('');
+  void out.offsetWidth;out.classList.add('show');
+  out.scrollIntoView({behavior:'smooth'});
+});
+</script>
+</body>
+</html>
